@@ -290,7 +290,7 @@ int main(int argc, char* argv[]) {
     printAlignmentWithVisualization(aligned.first, aligned.second);
 
     cout << "\nRuntime: " << duration.count() << " seconds\n";
-    long long MemoryUsage3 = printMemoryUsage();
+    long long NeedlemanMemoryUsage = printMemoryUsage();
 
     // Hirschberg
     string h_align1, h_align2;
@@ -304,7 +304,7 @@ int main(int argc, char* argv[]) {
     cout << "Visual Alignment:\n";
     printAlignmentWithVisualization(h_align1, h_align2);
     cout << "\nRuntime: " << duration_hirschberg.count() << " seconds\n";
-    long long MemoryUsage1 = printMemoryUsage();
+    long long HirschbergMemoryUsage = printMemoryUsage();
 
     // Smith
     start = chrono::high_resolution_clock::now();
@@ -312,12 +312,12 @@ int main(int argc, char* argv[]) {
     end = chrono::high_resolution_clock::now();
     duration = end - start;
     cout << "\nRuntime: " << duration.count() << " seconds\n";
-    long long MemoryUsage2 = printMemoryUsage();
+    long long SmithMemoryUsage = printMemoryUsage();
 
     cout << "\nMemory Usage Comparison: \n";
-    cout << "Needleman-Wunsch Memory Usage (in KB): " << MemoryUsage1;
-    cout << "\nSmith-Waterman Memory Usage (in KB): " << MemoryUsage2;
-    cout << "\nHirschberg's Algorithm Memory Usage (in KB): " << MemoryUsage3 << endl;
+    cout << "Needleman-Wunsch Memory Usage (in KB): " << NeedlemanMemoryUsage;
+    cout << "\nSmith-Waterman Memory Usage (in KB): " << SmithMemoryUsage;
+    cout << "\nHirschberg's Algorithm Memory Usage (in KB): " << HirschbergMemoryUsage << endl;
 
     return 0;
 }
