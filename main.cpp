@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <sys/resource.h>  // For getrusage
 #include <fstream> // For file reading
 #include <chrono>  // For measuring runtime 
 #include <climits> // For INT_MIN
@@ -73,14 +74,13 @@ void printAlignmentWithVisualization(const string &aligned1, const string &align
             alignment_line += ' '; // Gap
     }
 
-    out << "Aligned Sequences:\n";
     out << "Sequence 1: " << aligned1 << "\n"; // Aligned sequence 1
     out << "            " << alignment_line << "\n"; // Alignment visualization
-    out << "Sequence 2: " << aligned2 << "\n\n"; // Aligned sequence 2
+    out << "Sequence 2: " << aligned2 << "\n"; // Aligned sequence 2
 }
 
 // Smith-Waterman Algorithm (Local Alignment with traceback)
-pair<string, string> smithWaterman(const string &seq1, const string &seq2, int match, int mismatch, int gap_penalty, ofstream* out = nullptr) {
+pair<string, string> smithWaterman(const string &seq1, const string &seq2, int match, int mismatch, int gap_penalty) {
     int m = seq1.size();
     int n = seq2.size();
     vector<vector<int> > score_matrix(m + 1, vector<int>(n + 1, 0));
@@ -123,17 +123,10 @@ pair<string, string> smithWaterman(const string &seq1, const string &seq2, int m
         }
     }
 
-    cout << "\nSmith-Waterman Alignment (Local):\n";
-    cout << "Score: " << max_score << "\n";
+    cout << "\nSmith-Waterman Alignment\n";
+    cout << "Alignment Score: " << max_score << "\n\n";
     cout << "Visual Alignment:\n";
     printAlignmentWithVisualization(aligned1, aligned2);
-
-    if (out) {
-        *out << "Smith-Waterman Alignment\n";
-        *out << "Score: " << max_score << "\n";
-        *out << "Visual Alignment:\n";
-        printAlignmentWithVisualization(aligned1, aligned2, *out);
-    }
 
     return {aligned1, aligned2};
 }
@@ -215,6 +208,17 @@ int calculateAlignmentScore(const string &aligned1, const string &aligned2, int 
     return score;
 }
 
+void printMemoryUsage() {
+    // Create an rusage struct to hold resource usage information
+    struct rusage usage;
+    
+    // Fetch resource usage for the current process
+    getrusage(RUSAGE_SELF, &usage);
+    
+    // Print the maximum resident set size (peak memory usage) in KB
+    std::cout << "Memory Usage (in KB): " << usage.ru_maxrss << std::endl;
+}
+
 int main(int argc, char* argv[]) {
     if (argc < 3 || argc > 6) {
         cerr << "Required Format: " << argv[0] << " <sequence_file1> <sequence_file2> [match=1] [mismatch=-1] [gap=-1]\n";
@@ -232,49 +236,50 @@ int main(int argc, char* argv[]) {
     getline(file2, seq2);
 
     // Values for match, mismatch, & gap (default ones)
-    int match = 1, mismatch = -1, gap = -1;
+    int match = 1, mismatch = -1, gap = -2;
 
     // Values for match, mismatch, & gap (chosen by the user)
     if (argc > 3) match = stoi(argv[3]);
     if (argc > 4) mismatch = stoi(argv[4]);
     if (argc > 5) gap = stoi(argv[5]);
 
-    ofstream outfile("alignment_output.txt");
-
+    // Needleman
     auto start = chrono::high_resolution_clock::now();
     auto matrix = needlemanWunsch(seq1, seq2, match, mismatch, gap);
     auto aligned = traceback(seq1, seq2, matrix, match, mismatch, gap);
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double> duration = end - start;
 
-    cout << "\nNeedleman-Wunsch Runtime: " << duration.count() << " seconds\n";
-    cout << "Alignment Score: " << matrix[seq1.size()][seq2.size()] << "\n";
+    cout << "\nNeedleman-Wunsch Alignment (Global)\n";
+    cout << "Alignment Score: " << matrix[seq1.size()][seq2.size()] << "\n\n";
 
     cout << "Visual Alignment:\n";
     printAlignmentWithVisualization(aligned.first, aligned.second);
 
-    outfile << "Needleman-Wunsch Alignment\n";
-    outfile << "Score: " << matrix[seq1.size()][seq2.size()] << "\n";
-    outfile << "Visual Alignment:\n";
-    printAlignmentWithVisualization(aligned.first, aligned.second, outfile);
+    cout << "\nRuntime: " << duration.count() << " seconds\n";
+    printMemoryUsage();
 
-    smithWaterman(seq1, seq2, match, mismatch, gap, &outfile);
+    // Smith
+    start = chrono::high_resolution_clock::now();
+    smithWaterman(seq1, seq2, match, mismatch, gap);
+    end = chrono::high_resolution_clock::now();
+    duration = end - start;
+    cout << "\nRuntime: " << duration.count() << " seconds\n";
+    printMemoryUsage();
 
+    // Hirschberg
     string h_align1, h_align2;
     auto start_hirschberg = chrono::high_resolution_clock::now();
     hirschberg(seq1, seq2, h_align1, h_align2, match, mismatch, gap);
     int h_score = calculateAlignmentScore(h_align1, h_align2, match, mismatch, gap);
     auto end_hirschberg = chrono::high_resolution_clock::now();
     chrono::duration<double> duration_hirschberg = end_hirschberg - start_hirschberg;
-    cout << "\nHirschberg Runtime: " << duration_hirschberg.count() << " seconds\n";
-    cout << "Hirschberg Alignment Score: " << h_score << "\n";
+    cout << "\nHirschberg Alignment" << h_score << "\n";
+    cout << "Score: " << h_score << "\n\n";
     cout << "Visual Alignment:\n";
     printAlignmentWithVisualization(h_align1, h_align2);
-
-    outfile << "Hirschberg Alignment\n";
-    outfile << "Hirschberg Alignment Score: " << h_score << "\n\n";
-    outfile << "Visual Alignment:\n";
-    printAlignmentWithVisualization(h_align1, h_align2, outfile);
+    cout << "\nHirschberg Runtime: " << duration_hirschberg.count() << " seconds\n";
+    printMemoryUsage();
 
     return 0;
 }
