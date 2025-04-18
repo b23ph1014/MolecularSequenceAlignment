@@ -216,7 +216,7 @@ void printMemoryUsage() {
     getrusage(RUSAGE_SELF, &usage);
     
     // Print the maximum resident set size (peak memory usage) in KB
-    std::cout << "Memory Usage (in KB): " << usage.ru_maxrss << std::endl;
+    cout << "Memory Usage (in KB): " << usage.ru_maxrss / 1024 << endl;
 }
 
 int main(int argc, char* argv[]) {
