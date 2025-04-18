@@ -138,3 +138,79 @@ pair<string, string> smithWaterman(const string &seq1, const string &seq2, int m
     return {aligned1, aligned2};
 }
 
+// Computes the last row of N-W matrix...used in Hirschberg's algorithm
+vector<int> nwScore(const string &a, const string &b, int match, int mismatch, int gap) {
+    int m = a.size(), n = b.size();
+    vector<int> prev(n + 1), curr(n + 1);
+    for (int j = 0; j <= n; ++j) prev[j] = j * gap;
+
+    
+    for (int i = 1; i <= m; ++i) {
+        curr[0] = i * gap;
+        for (int j = 1; j <= n; ++j) {
+            int cost = (a[i - 1] == b[j - 1]) ? match : mismatch;
+            curr[j] = max({prev[j - 1] + cost, prev[j] + gap, curr[j - 1] + gap});
+        }
+        prev = curr;
+    }
+    return prev;
+}
+
+// Hirschberg's Algorithm: memory-efficient global alignment
+void hirschberg(const string &a, const string &b, string &res_a, string &res_b, int match, int mismatch, int gap) {
+    int m = a.size(), n = b.size();
+  
+    // Base cases
+    if (m == 0) {
+        res_a += string(n, '-');
+        res_b += b;
+    } else if (n == 0) {
+        res_a += a;
+        res_b += string(m, '-');
+    } else if (m == 1 || n == 1) {
+        // Needleman-Wunsch for smaller sequences
+        auto matrix = needlemanWunsch(a, b, match, mismatch, gap);
+        auto align = traceback(a, b, matrix, match, mismatch, gap);
+        res_a += align.first;
+        res_b += align.second;
+    } else {
+        // Recursive divide & conquer
+        int mid = m / 2;
+        auto scoreL = nwScore(a.substr(0, mid), b, match, mismatch, gap);
+        auto scoreR = nwScore(string(a.rbegin(), a.rbegin() + (m - mid)), string(b.rbegin(), b.rend()), match, mismatch, gap);
+
+        // Finding partition point
+        int max_j = 0, max_score = INT_MIN;
+        for (int j = 0; j <= n; ++j) {
+            int val = scoreL[j] + scoreR[n - j];
+            if (val > max_score) {
+                max_score = val;
+                max_j = j;
+            }
+        }
+      
+        // Recursively align the halves
+        string left_a, left_b, right_a, right_b;
+        hirschberg(a.substr(0, mid), b.substr(0, max_j), left_a, left_b, match, mismatch, gap);
+        hirschberg(a.substr(mid), b.substr(max_j), right_a, right_b, match, mismatch, gap);
+
+        res_a += left_a + right_a;
+        res_b += left_b + right_b;
+    }
+}
+
+
+// Helper function to calculate alignment score (used in Hirschberg's algorithm)
+int calculateAlignmentScore(const string &aligned1, const string &aligned2, int match, int mismatch, int gap) {
+    int score = 0;
+    for (int i = 0; i < aligned1.size(); ++i) {
+        if (aligned1[i] == '-' || aligned2[i] == '-') {
+            score += gap;
+        } else if (aligned1[i] == aligned2[i]) {
+            score += match;
+        } else {
+            score += mismatch;
+        }
+    }
+    return score;
+}
