@@ -214,3 +214,67 @@ int calculateAlignmentScore(const string &aligned1, const string &aligned2, int 
     }
     return score;
 }
+
+int main(int argc, char* argv[]) {
+    if (argc < 3 || argc > 6) {
+        cerr << "Required Format: " << argv[0] << " <sequence_file1> <sequence_file2> [match=1] [mismatch=-1] [gap=-1]\n";
+        return 1;
+    }
+
+    string seq1, seq2;
+    ifstream file1(argv[1]), file2(argv[2]);
+    if (!file1 || !file2) {
+        cerr << "Error reading input files.\n";
+        return 1;
+    }
+
+    getline(file1, seq1);
+    getline(file2, seq2);
+
+    // Values for match, mismatch, & gap (default ones)
+    int match = 1, mismatch = -1, gap = -1;
+
+    // Values for match, mismatch, & gap (chosen by the user)
+    if (argc > 3) match = stoi(argv[3]);
+    if (argc > 4) mismatch = stoi(argv[4]);
+    if (argc > 5) gap = stoi(argv[5]);
+
+    ofstream outfile("alignment_output.txt");
+
+    auto start = chrono::high_resolution_clock::now();
+    auto matrix = needlemanWunsch(seq1, seq2, match, mismatch, gap);
+    auto aligned = traceback(seq1, seq2, matrix, match, mismatch, gap);
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+
+    cout << "\nNeedleman-Wunsch Runtime: " << duration.count() << " seconds\n";
+    cout << "Alignment Score: " << matrix[seq1.size()][seq2.size()] << "\n";
+
+    cout << "Visual Alignment:\n";
+    printAlignmentWithVisualization(aligned.first, aligned.second);
+
+    outfile << "Needleman-Wunsch Alignment\n";
+    outfile << "Score: " << matrix[seq1.size()][seq2.size()] << "\n";
+    outfile << "Visual Alignment:\n";
+    printAlignmentWithVisualization(aligned.first, aligned.second, outfile);
+
+    smithWaterman(seq1, seq2, match, mismatch, gap, &outfile);
+
+    string h_align1, h_align2;
+    auto start_hirschberg = chrono::high_resolution_clock::now();
+    hirschberg(seq1, seq2, h_align1, h_align2, match, mismatch, gap);
+    int h_score = calculateAlignmentScore(h_align1, h_align2, match, mismatch, gap);
+    auto end_hirschberg = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration_hirschberg = end_hirschberg - start_hirschberg;
+    cout << "\nHirschberg Runtime: " << duration_hirschberg.count() << " seconds\n";
+    cout << "Hirschberg Alignment Score: " << h_score << "\n";
+    cout << "Visual Alignment:\n";
+    printAlignmentWithVisualization(h_align1, h_align2);
+
+    outfile << "Hirschberg Alignment\n";
+    outfile << "Hirschberg Alignment Score: " << h_score << "\n\n";
+    outfile << "Visual Alignment:\n";
+    printAlignmentWithVisualization(h_align1, h_align2, outfile);
+
+    return 0;
+}
