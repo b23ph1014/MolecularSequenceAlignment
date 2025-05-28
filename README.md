@@ -8,32 +8,10 @@ Global Alignment using Needleman-Wunsch,Local Alignment using Smith-Waterman,Spa
 Molecular_sequence_alignment.cpp – Main implementation file
 Sequence input files – Plain text files containing the sequences (one per line)
 
-⚙️ How to Compile and Run
-🛠️ Compilation
-Use g++ or any modern C++ compiler:
-
-bash
-Copy
-Edit
-g++ -std=c++11 -O2 Molecular_sequence_alignment.cpp -o align
-🚀 Execution
-bash
-Copy
-Edit
-./align <sequence_file1> <sequence_file2> [match=1] [mismatch=-1] [gap=-2]
-Example:
-
-bash
-Copy
-Edit
-./align seq1.txt seq2.txt 2 -1 -2
-📥 Input Format
+# Input Format
 Each sequence should be in a separate text file (e.g., seq1.txt, seq2.txt), with one line containing the sequence (e.g., ACGTAG).
 
-🖥️ Sample Output
-text
-Copy
-Edit
+# Sample Output
 Needleman-Wunsch Alignment (Global)
 Alignment Score: 5
 
@@ -44,8 +22,7 @@ Sequence 2: ACGGAG
 
 Runtime: 0.00123 seconds
 Memory Usage: 42 KB
-📈 Algorithms Used
-Algorithm	Type	Space Complexity	When to Use
-Needleman-Wunsch	Global	O(m×n)	Best for full-length alignments
-Smith-Waterman	Local	O(m×n)	Best for finding matching subsequences
-Hirschberg	Global	O(n)	Best for long sequences (low memory)
+# Algorithms Used
+Needleman-Wunsch,Global,space complexity of O(m×n),Best for full-length alignments
+Smith-Waterman,Local,space complexity of O(m×n),Best for finding matching subsequences
+Hirschberg,Global,space complexity of O(n),Best for long sequences (low memory)
