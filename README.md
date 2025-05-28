@@ -12,6 +12,7 @@ Sequence input files – Plain text files containing the sequences (one per line
 Each sequence should be in a separate text file (e.g., seq1.txt, seq2.txt), with one line containing the sequence (e.g., ACGTAG).
 
 # Sample Output
+```
 Needleman-Wunsch Alignment (Global)
 Alignment Score: 5
 
@@ -22,6 +23,7 @@ Sequence 2: ACGGAG
 
 Runtime: 0.00123 seconds
 Memory Usage: 42 KB
+```
 # Algorithms Used
 Needleman-Wunsch,Global,space complexity of O(m×n),Best for full-length alignments
 Smith-Waterman,Local,space complexity of O(m×n),Best for finding matching subsequences
